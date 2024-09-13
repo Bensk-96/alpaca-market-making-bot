@@ -221,7 +221,7 @@ async def MM_basic():
     META = MarketMaker(dataclient=i, ordermanager=o, symbol="META", margins=0.003, max_position=2, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
     GOOGL = MarketMaker(dataclient=i, ordermanager=o, symbol="GOOGL", margins=0.003, max_position=7, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
     QCOM = MarketMaker(dataclient=i, ordermanager=o, symbol="QCOM", margins=0.003, max_position=5, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
-    MSFT = MarketMaker(dataclient=i, ordermanager=o, symbol="MFST", margins=0.003, max_position=2, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    MSFT = MarketMaker(dataclient=i, ordermanager=o, symbol="MSFT", margins=0.003, max_position=2, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
     NFLX = MarketMaker(dataclient=i, ordermanager=o, symbol="NFLX", margins=0.003, max_position=1, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
 
 
