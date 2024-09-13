@@ -210,7 +210,7 @@ class MarketMaker:
 
 
 async def MM_basic():
-    i = DataClient(symbols={"AAPL","AMZN","TSLA","NVDA","META", "GOOGL","QCOM","VIX"})
+    i = DataClient(symbols={"AAPL","AMZN","TSLA","NVDA","META", "GOOGL","QCOM","MFST","NFLX"})
     o = OrderManager()
     await asyncio.sleep(5)  
 
