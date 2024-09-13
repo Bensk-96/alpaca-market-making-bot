@@ -210,7 +210,7 @@ class MarketMaker:
 
 
 async def MM_basic():
-    i = DataClient(symbols={"AAPL","AMZN","TSLA","NVDA","META", "GOOGL","QCOM","MFST","NFLX"})
+    i = DataClient(symbols={"AAPL","AMZN","TSLA","NVDA","META", "GOOGL","QCOM","MSFT","NFLX"})
     o = OrderManager()
     await asyncio.sleep(5)  
 
@@ -221,7 +221,7 @@ async def MM_basic():
     META = MarketMaker(dataclient=i, ordermanager=o, symbol="META", margins=0.003, max_position=2, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
     GOOGL = MarketMaker(dataclient=i, ordermanager=o, symbol="GOOGL", margins=0.003, max_position=7, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
     QCOM = MarketMaker(dataclient=i, ordermanager=o, symbol="QCOM", margins=0.003, max_position=5, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
-    MFST = MarketMaker(dataclient=i, ordermanager=o, symbol="MFST", margins=0.003, max_position=2, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    MSFT = MarketMaker(dataclient=i, ordermanager=o, symbol="MFST", margins=0.003, max_position=2, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
     NFLX = MarketMaker(dataclient=i, ordermanager=o, symbol="NFLX", margins=0.003, max_position=1, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
 
 
@@ -232,7 +232,7 @@ async def MM_basic():
     await o.cancel_all_orders()
     await o.close_all_positions()
     await asyncio.sleep(2) 
-    await asyncio.gather(AAPL.main(), AMZN.main(),TSLA.main(), NVDA.main(), META.main(), GOOGL.main(), QCOM.main(), MFST.main(), NFLX.main())
+    await asyncio.gather(AAPL.main(), AMZN.main(),TSLA.main(), NVDA.main(), META.main(), GOOGL.main(), QCOM.main(), MSFT.main(), NFLX.main())
 
 loop = asyncio.get_event_loop()
 try:
