@@ -33,7 +33,7 @@ class MarketMaker:
         self._order_type = order_type
 
     
-    def _get_weighted_price(self): ## Check if bid size and ask size are 0
+    def _get_weighted_price(self): 
         quote = self._dataclient.get_last_quote(self._symbol) 
         if quote is None:
             logging.error(f"No quote data available for {self._symbol}.")
@@ -73,9 +73,6 @@ class MarketMaker:
         while True:
             Order_ID_trader = []
             pos_qty = self._dataclient.get_position_by_symbol(self._symbol)
-            #midprice = self._dataclient.get_last_mid_price(self._symbol)
-            #midprice = self._dataclient.get_last_trade_price(self._symbol)
-            #weighted_price = self._get_weighted_price()
 
             if self._price_type == MIDPRICE:
                 price = self._dataclient.get_last_mid_price(self._symbol)  
@@ -100,11 +97,6 @@ class MarketMaker:
                     logging.error(f"No price info available for symbol {self._symbol}. Skipping this cycle.")
                     await asyncio.sleep(20)  # Sleep before retrying
                     continue
-
-            # if (price is None) or ((bid_price is None) and (ask_price is None)):
-            #     logging.error(f"No price info available for symbol {self._symbol}. Skipping this cycle.")
-            #     await asyncio.sleep(20)  # Sleep before retrying
-            #     continue
             
             if self._price_type == BIDASKPRICE:
                 bid_price, ask_price = bid_ask_prices
@@ -157,7 +149,6 @@ class MarketMaker:
             except Exception as e:
                 logging.error(f"Error in placing orders: {e}")
 
-            #logging.info("trader function sleeps for 20 s")
             await asyncio.sleep(self._trader_loop_sleep_time)  
 
             if self._order_type != ORDER_TYPE_IOC:
@@ -214,7 +205,7 @@ class MarketMaker:
 
 
     async def main(self) -> None:
-        # Run both _trader and _take_profit concurrently
+        
         await asyncio.gather(self._trader(), self._take_profit())
 
 
@@ -223,13 +214,16 @@ async def MM_basic():
     o = OrderManager()
     await asyncio.sleep(5)  
 
-    AAPL = MarketMaker(dataclient=i, ordermanager=o, symbol="AAPL", margins=0.003, max_position=5, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
-    AMZN = MarketMaker(dataclient=i, ordermanager=o, symbol="AMZN", margins=0.003, max_position=6 , trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
-    TSLA = MarketMaker(dataclient=i, ordermanager=o, symbol="TSLA", margins=0.003, max_position=5, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
-    NVDA = MarketMaker(dataclient=i, ordermanager=o, symbol="NVDA", margins=0.003, max_position=9, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
-    META = MarketMaker(dataclient=i, ordermanager=o, symbol="META", margins=0.003, max_position=2, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
-    GOOGL = MarketMaker(dataclient=i, ordermanager=o, symbol="GOOGL", margins=0.003, max_position=7, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
-    QCOM = MarketMaker(dataclient=i, ordermanager=o, symbol="QCOM", margins=0.003, max_position=5, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    AAPL = MarketMaker(dataclient=i, ordermanager=o, symbol="AAPL", margins=0.003, max_position=5, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    AMZN = MarketMaker(dataclient=i, ordermanager=o, symbol="AMZN", margins=0.003, max_position=6 , trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    TSLA = MarketMaker(dataclient=i, ordermanager=o, symbol="TSLA", margins=0.003, max_position=5, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    NVDA = MarketMaker(dataclient=i, ordermanager=o, symbol="NVDA", margins=0.003, max_position=9, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    META = MarketMaker(dataclient=i, ordermanager=o, symbol="META", margins=0.003, max_position=2, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    GOOGL = MarketMaker(dataclient=i, ordermanager=o, symbol="GOOGL", margins=0.003, max_position=7, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    QCOM = MarketMaker(dataclient=i, ordermanager=o, symbol="QCOM", margins=0.003, max_position=5, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    MFST = MarketMaker(dataclient=i, ordermanager=o, symbol="MFST", margins=0.003, max_position=2, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+    NFLX = MarketMaker(dataclient=i, ordermanager=o, symbol="NFLX", margins=0.003, max_position=1, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
+
 
     asyncio.create_task(i.start())
     await o.start()  
@@ -238,7 +232,7 @@ async def MM_basic():
     await o.cancel_all_orders()
     await o.close_all_positions()
     await asyncio.sleep(2) 
-    await asyncio.gather(AAPL.main(), AMZN.main(),TSLA.main(), NVDA.main(), META.main(), GOOGL.main(), QCOM.main())
+    await asyncio.gather(AAPL.main(), AMZN.main(),TSLA.main(), NVDA.main(), META.main(), GOOGL.main(), QCOM.main(), MFST.main(), NFLX.main())
 
 loop = asyncio.get_event_loop()
 try:
