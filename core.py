@@ -355,7 +355,7 @@ class OrderManager():
             logging.error(f"Error closing position for {symbol}: {e}")
             return ClosePositionResponse(symbol=symbol, success=False, status=500, error=str(e))
    
-    ##TODO Test out cancel_all_orders method before upload to git 
+    ##TODO Test out cancel_all_orders method 
     async def cancel_all_orders(self):
         try:
             # Send DELETE request to cancel all orders

@@ -8,7 +8,7 @@ from typing import Optional
 import time
 
 from core import DataClient, OrderManager, Client
-from core import ORDER_CYLE_END_EVENT, ORDER_TYPE_IOC
+from core import ORDER_CYLE_END_EVENT, ORDER_TYPE_IOC, ORDER_TYPE_DAY
 logging.basicConfig(level=logging.INFO , format='%(asctime)s - %(levelname)s - %(message)s')
 
 async def main():
@@ -16,11 +16,11 @@ async def main():
     await o.start()  
     
     logging.info("Insert order for AMZN")
-    order1 = await o.insert_order(symbol= "AMZN", price = 200, quantity= 1, side = "buy", order_type=ORDER_TYPE_IOC)
+    order1 = await o.insert_order(symbol= "AMZN", price = 200, quantity= 1, side = "buy", order_type=ORDER_TYPE_DAY)
     logging.info("Insert order for AAPL")
-    order2 = await o.insert_order(symbol= "AAPL", price = 200, quantity= 1, side = "buy", order_type=ORDER_TYPE_IOC)
+    order2 = await o.insert_order(symbol= "AAPL", price = 200, quantity= 1, side = "buy", order_type=ORDER_TYPE_DAY)
     logging.info("Insert order for TSLA")
-    order3 = await o.insert_order(symbol= "TSLA", price = 200, quantity= 1, side = "buy", order_type=ORDER_TYPE_IOC)
+    order3 = await o.insert_order(symbol= "TSLA", price = 200, quantity= 1, side = "buy", order_type=ORDER_TYPE_DAY)
 
     print(f"Order 1 Id : {order1.order_id}")
     print(f"Order 2 Id : {order2.order_id}")
