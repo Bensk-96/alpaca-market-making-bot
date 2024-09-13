@@ -57,7 +57,6 @@ class MarketMaker:
             logging.error(f"Invalid bid/ask prices for {self._symbol}. Bid: {quote.bid_price}, Ask: {quote.ask_price}")
             return None
 
-
         
     async def _get_fill_price(self):
         position_object = await self._dataclient.get_position_object_by_symbol(self._symbol)
@@ -105,7 +104,6 @@ class MarketMaker:
             else:
                 self._buy_price = round(price - price * self._margins, 2)
                 self._sell_price = round(price + price * self._margins, 2)
-
 
             try:
                 if pos_qty == 0:
@@ -158,6 +156,7 @@ class MarketMaker:
                     except Exception as e:
                         logging.error(f"Error cancelling order {order}: {e}")
 
+
     async def _take_profit(self):
         while True:
             pos_qty = self._dataclient.get_position_by_symbol(self._symbol)
@@ -209,7 +208,7 @@ class MarketMaker:
         await asyncio.gather(self._trader(), self._take_profit())
 
 
-async def MM_basic():
+async def MarketMakerBasic():
     i = DataClient(symbols={"AAPL","AMZN","TSLA","NVDA","META", "GOOGL","QCOM","MSFT","NFLX"})
     o = OrderManager()
     await asyncio.sleep(5)  
@@ -224,7 +223,6 @@ async def MM_basic():
     MSFT = MarketMaker(dataclient=i, ordermanager=o, symbol="MSFT", margins=0.003, max_position=2, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
     NFLX = MarketMaker(dataclient=i, ordermanager=o, symbol="NFLX", margins=0.003, max_position=1, trader_loop_sleep_time = 25, tp_loop_sleep_time= 5, price_type = WEIGHTEDPRICE, order_type= ORDER_TYPE_DAY)
 
-
     asyncio.create_task(i.start())
     await o.start()  
 
@@ -236,7 +234,7 @@ async def MM_basic():
 
 loop = asyncio.get_event_loop()
 try:
-    loop.run_until_complete(MM_basic())
+    loop.run_until_complete(MarketMakerBasic())
 except KeyboardInterrupt:
     logging.info('Stopped (KeyboardInterrupt)')
 finally:
