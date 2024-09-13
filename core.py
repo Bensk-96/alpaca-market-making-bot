@@ -76,19 +76,24 @@ class Client:
             await cls.session.close()
             cls.session = None
 
+##TODO Test out DataClient and OrderManager 
+##TODO Test out cancel_all_orders method 
 
 class DataClient(): 
-    def __init__(self, max_nr_trade_history: int = 100, symbols : Optional[Set[str]] = None):   
+    def __init__(self, max_nr_trade_history: int = 100, max_nr_bar_history: int = 100,symbols : Optional[Set[str]] = None):   
         self._max_trade_history = max_nr_trade_history
+        self._max_bar_history = max_nr_bar_history
         self._symbols = symbols if symbols is not None else set()
         self._base_url = URL('https://paper-api.alpaca.markets')
         self._data_feed = "iex"
         self._last_trade_price = {}
-        self._trade_tick_hist = defaultdict(deque)
+        #self._trade_tick_hist = defaultdict(deque)
+        self._trade_tick_hist = defaultdict(lambda: deque(maxlen=self._max_trade_history))
         self._last_quote = defaultdict(deque)
         self._last_mid_price = {}
         self._last_bar = {}
-        self._bar_hist = defaultdict(deque)
+        #self._bar_hist = defaultdict(deque)
+        self._bar_hist = defaultdict(lambda: deque(maxlen=self._max_bar_history))
         self._trade_update = defaultdict(dict)
         self._position_manager = PositionManager()
                       
@@ -109,8 +114,8 @@ class DataClient():
         self._last_trade_price[symbol] = trade_tick.price
         _trade_hist_to_update = self._trade_tick_hist[symbol]
         _trade_hist_to_update.append(trade_tick)
-        while len(_trade_hist_to_update) > self._max_trade_history:
-            _trade_hist_to_update.popleft()
+        #while len(_trade_hist_to_update) > self._max_trade_history:
+        #    _trade_hist_to_update.popleft()
         #logging.info(trade_tick)
 
     def get_last_trade_price(self, symbol : str) ->  Optional[float]:
@@ -176,12 +181,6 @@ class DataClient():
     def get_all_positions(self) -> dict:
         return self._position_manager._positions_by_symbol
     
-    # async def get_position_object_by_symbol(self, symbol) -> dict:
-    #     await self._position_manager.get_positions() # Update Position objects
-    #     position_object = self._position_manager._position_objects_by_symbol.get(symbol, None)
-    #     return position_object
-
-    ## Added new function
     async def get_position_object_by_symbol(self, symbol) -> dict:
         """Fetch the position object for a specific symbol."""
         # Check if the position is cached and refresh only if necessary
@@ -208,26 +207,6 @@ class PositionManager():
         await instance.get_positions()
         return instance
     
-    # async def get_positions(self, symbol=None):
-    #     url = f"{self._pos_url}/{symbol}" if symbol else self._pos_url
-    #     try:
-    #         async with Client.session.get(url) as result:
-    #             if result.status == 200:
-    #                 response = await result.json()
-    #                 if symbol:
-    #                     response = [response]  # Wrap in a list for uniformity
-
-    #                 for individual_response in response:
-    #                     symbol = individual_response.get("symbol", "Unknown")
-    #                     qty = float(individual_response.get("qty", 0))
-    #                     self._position_objects_by_symbol[symbol] = individual_response
-    #                     self._positions_by_symbol[symbol] = {"position": qty}
-    #             else:
-    #                 response_text = await result.text()
-    #                 logging.warning(f"Failed to get positions: Status {result.status}, Details: {response_text}")
-    #     except Exception as e:
-    #         logging.warning(f"Error to get positions: {e}")    
-
     async def get_positions(self, symbol=None, force_refresh=False):
         """Fetch positions from Alpaca API, with optional force refresh."""
         current_time = time.time()
@@ -276,7 +255,7 @@ class OrderManager():
         self._order_url = "https://paper-api.alpaca.markets/v2/orders"
         self._pos_url = "https://paper-api.alpaca.markets/v2/positions"
         self.session = None  # We'll initialize this in an async context
-        self._submitted_order_by_order_id = defaultdict(dict)
+        #self._submitted_order_by_order_id = defaultdict(dict)
            
     async def start(self):
         if not Client.session:
@@ -297,7 +276,7 @@ class OrderManager():
                     #logging.info(f"Successful Order Insertion: {order_response}")
                     symbol = order_response["symbol"]
                     id = order_response["id"]
-                    self._submitted_order_by_order_id[symbol][id] = id ## record id instead of order_response
+                    #self._submitted_order_by_order_id[symbol][id] = id ## record id instead of order_response
                     return InsertOrderResponse(success=True, order_id=id, error=None)
                 else:
                     logging.warning(f"Order Insertion Error (Status {result.status}): {response_text}")
@@ -307,7 +286,6 @@ class OrderManager():
             logging.warning(f"Error inserting order: {e}")
             return InsertOrderResponse(success=False, order_id=None, error=e)
 
-    ##TODO None has no attribute delete    
     async def close_all_positions(self, cancel_orders: bool = True):
         params = {"cancel_orders": cancel_orders}
         responses = []
@@ -327,7 +305,7 @@ class OrderManager():
 
                         if status == 200:
                             logging.info(f"Closed position for {symbol}: {body}")
-                            self._submitted_order_by_order_id[symbol][id] = individual_response
+                            #self._submitted_order_by_order_id[symbol][id] = individual_response
                             responses.append(ClosePositionResponse(symbol=symbol, success=True, status=status))
                         else:
                             logging.warning(f"Failed to close position for {symbol}: Status {status}, Details: {body}")
@@ -377,13 +355,12 @@ class OrderManager():
             logging.error(f"Error closing position for {symbol}: {e}")
             return ClosePositionResponse(symbol=symbol, success=False, status=500, error=str(e))
    
-
-    ##TODO None has no attribute delete  
+    ##TODO Test out cancel_all_orders method before upload to git 
     async def cancel_all_orders(self):
         try:
             # Send DELETE request to cancel all orders
             async with Client.session.delete(self._order_url) as result:
-                response_text = await result.text()
+                #response_text = await result.text() ##TODO : response_text never used
 
                 if result.status == 207:  # Multi-Status
                     logging.info("Received multi-status response for canceling all orders.")
@@ -491,4 +468,7 @@ class RiskManager():
 
 
 class SystemMonitoring():
+    pass
+
+class MarketClock():
     pass
