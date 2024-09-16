@@ -167,7 +167,7 @@ class MarketMaker:
                     
                     take_profit_price = fill_price * (1 + self._margins)
                     take_profit_price = round(take_profit_price, 2)
-                    logging.info(f"{self._symbol} has + {pos_qty} Net Position, insert sell take profit order at {take_profit_price}")
+                    logging.info(f"{self._symbol} has + {pos_qty} Net Position, insert sell take profit order at {take_profit_price} for fill price {fill_price}")
                     short_order = await self._ordermanager.insert_order(symbol=self._symbol, 
                                                                         price=take_profit_price, 
                                                                         quantity=pos_qty, 
@@ -180,7 +180,7 @@ class MarketMaker:
                     
                     take_profit_price = fill_price * (1 - self._margins)
                     take_profit_price = round(take_profit_price, 2)
-                    logging.info(f"{self._symbol} has {pos_qty} Net Position, insert buy take profit order at {take_profit_price}")
+                    logging.info(f"{self._symbol} has {pos_qty} Net Position, insert buy take profit order at {take_profit_price} for fill price {fill_price}")
                     long_order = await self._ordermanager.insert_order(symbol=self._symbol, 
                                                                        price=take_profit_price, 
                                                                        quantity=abs(pos_qty), 
