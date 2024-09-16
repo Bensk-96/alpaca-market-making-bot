@@ -123,25 +123,25 @@ class MarketMaker:
                     if short_order and short_order.success:
                         Order_ID_trader.append(short_order.order_id)
 
-                # elif pos_qty > 0:
-                #     logging.info(f"{self._symbol} has + {pos_qty} Net Position, insert sell limit order at {self._sell_price}")
-                #     short_order = await self._ordermanager.insert_order(symbol=self._symbol, 
-                #                                                         price=self._sell_price, 
-                #                                                         quantity=pos_qty, 
-                #                                                         side=SIDE_SELL, 
-                #                                                         order_type=self._order_type)
-                #     if short_order and short_order.success:
-                #         Order_ID_trader.append(short_order.order_id)
+                elif pos_qty > 0:
+                    logging.info(f"{self._symbol} has + {pos_qty} Net Position, insert sell limit order at {self._sell_price}")
+                    short_order = await self._ordermanager.insert_order(symbol=self._symbol, 
+                                                                        price=self._sell_price, 
+                                                                        quantity=pos_qty, 
+                                                                        side=SIDE_SELL, 
+                                                                        order_type=self._order_type)
+                    if short_order and short_order.success:
+                        Order_ID_trader.append(short_order.order_id)
 
-                # elif pos_qty < 0:
-                #     logging.info(f"{self._symbol} has {pos_qty} Net Position, insert buy limit order at {self._buy_price}")
-                #     long_order = await self._ordermanager.insert_order(symbol=self._symbol, 
-                #                                                        price=self._buy_price, 
-                #                                                        quantity=abs(pos_qty), 
-                #                                                        side=SIDE_BUY, 
-                #                                                        order_type=self._order_type)
-                #     if long_order and long_order.success:
-                #         Order_ID_trader.append(long_order.order_id)
+                elif pos_qty < 0:
+                    logging.info(f"{self._symbol} has {pos_qty} Net Position, insert buy limit order at {self._buy_price}")
+                    long_order = await self._ordermanager.insert_order(symbol=self._symbol, 
+                                                                       price=self._buy_price, 
+                                                                       quantity=abs(pos_qty), 
+                                                                       side=SIDE_BUY, 
+                                                                       order_type=self._order_type)
+                    if long_order and long_order.success:
+                        Order_ID_trader.append(long_order.order_id)
 
             except Exception as e:
                 logging.error(f"Error in placing orders: {e}")
