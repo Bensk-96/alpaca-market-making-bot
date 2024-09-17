@@ -152,7 +152,7 @@ class DataClient():
         #logging.info(f"Symbol: {symbol}, ID: {id}, Type of _trade_update[symbol]: {type(self._trade_update[symbol])}")  
         if trade_update.event in FILL_EVENT:   ## TODO order status update : fill, cancel, rejected 
             #print(f"update position for {symbol}")
-            position_qty = float(trade_update.position_qty)
+            position_qty = float(trade_update.position_qty) ## TODO add logging for partial fill / fill order, symbol, fill number
             await self._position_manager.update_position(symbol, position_qty)
         self._trade_update[symbol][id] = trade_update
         #logging.info(trade_update)
@@ -298,7 +298,7 @@ class OrderManager():
                         symbol = individual_response.get("symbol", "Unknown")
                         status = individual_response.get("status")
                         body = individual_response.get("body", {})
-                        id = individual_response.get("id")
+                        #id = individual_response.get("id")
 
                         if status == 200:
                             logging.info(f"Closed position for {symbol}: {body}")
@@ -352,12 +352,11 @@ class OrderManager():
             logging.error(f"Error closing position for {symbol}: {e}")
             return ClosePositionResponse(symbol=symbol, success=False, status=500, error=str(e))
    
-    ##TODO Test out cancel_all_orders method 
+
     async def cancel_all_orders(self):
         try:
             # Send DELETE request to cancel all orders
             async with Client.session.delete(self._order_url) as result:
-                #response_text = await result.text() ##TODO : response_text never used
 
                 if result.status == 207:  # Multi-Status
                     logging.info("Received multi-status response for canceling all orders.")
@@ -414,9 +413,13 @@ class OrderManager():
             logging.warning(f"Error cancelling order {order_id}: {e}")
             return CancelOrderResponse(success=False, error=str(e))
     
+    ## TODO Get orders and get order by id
+
     ## Todo 
     async def replace_order(self):
         pass
+
+
 
 
 

@@ -14,6 +14,7 @@ class MarketMaker:
                  ordermanager: OrderManager, 
                  symbol: Optional[str] = None, 
                  margins: float = None, 
+                 stop_loss : float = 0.0,
                  max_position: int = None,
                  trader_loop_sleep_time : int = 30,
                  tp_loop_sleep_time : int = 10,
@@ -24,6 +25,7 @@ class MarketMaker:
         self._symbol: Optional[str] = symbol
         self._max_position = max_position
         self._margins = margins
+        self._stop_loss = stop_loss
         self._buy_price = None
         self._sell_price = None
         self._trader_loop_sleep_time = trader_loop_sleep_time
@@ -57,14 +59,14 @@ class MarketMaker:
             return None
 
         
-    async def _get_fill_price(self):
+    async def _get_fill_price_and_pnl(self):
         position_object = await self._dataclient.get_position_object_by_symbol(self._symbol)
         if position_object is not None:
-            # Convert avg_entry_price from string to float
-            return float(position_object['avg_entry_price'])
+            return float(position_object['avg_entry_price']), float(position_object['unrealized_intraday_plpc'])
         else:
             logging.warning(f"No position found for {self._symbol}")
-            return None
+            return None, None  # Return None if no position is found
+
 
 
     async def _trader(self):
@@ -158,39 +160,63 @@ class MarketMaker:
 
     async def _take_profit(self):
         while True:
-            pos_qty = self._dataclient.get_position_by_symbol(self._symbol)          
+            pos_qty = self._dataclient.get_position_by_symbol(self._symbol)
             Order_ID_TP = []
             try:
+                # Handling for long positions (pos_qty > 0)
                 if pos_qty > 0:
-                    fill_price = await self._get_fill_price()    
-                    take_profit_price = fill_price * (1 + self._margins)
-                    take_profit_price = round(take_profit_price, 2)
-                    logging.info(f"{self._symbol} has + {pos_qty} Net Position, insert sell take profit order at {take_profit_price} for fill price {fill_price}")
-                    short_order = await self._ordermanager.insert_order(symbol=self._symbol, 
-                                                                        price=take_profit_price, 
-                                                                        quantity=pos_qty, 
-                                                                        side=SIDE_SELL, 
-                                                                        order_type=self._order_type)
-                    if short_order and short_order.success:
-                        Order_ID_TP.append(short_order.order_id)
+                    fill_price, pnl = await self._get_fill_price_and_pnl()
 
+                    # Check if either fill_price or pnl is None
+                    if fill_price is None or pnl is None:
+                        logging.warning(f"No valid fill price or PnL for {self._symbol}. Skipping take-profit for this cycle.")
+                        continue
+
+                    # Check stop loss
+                    if pnl < -self._stop_loss and self._stop_loss != 0.0:
+                        await self._ordermanager.close_position(self._symbol)
+                        logging.info(f"Stop loss triggered, closing {pos_qty} long position for {self._symbol}")
+                    else:
+                        take_profit_price = fill_price * (1 + self._margins)
+                        take_profit_price = round(take_profit_price, 2)
+                        logging.info(f"{self._symbol} has + {pos_qty} Net Position, inserting sell take profit order at {take_profit_price} (fill price: {fill_price})")
+                        short_order = await self._ordermanager.insert_order(symbol=self._symbol, 
+                                                                            price=take_profit_price, 
+                                                                            quantity=pos_qty, 
+                                                                            side=SIDE_SELL, 
+                                                                            order_type=self._order_type)
+                        if short_order and short_order.success:
+                            Order_ID_TP.append(short_order.order_id)
+
+                # Handling for short positions (pos_qty < 0)
                 elif pos_qty < 0:
-                    fill_price = await self._get_fill_price()    
-                    take_profit_price = fill_price * (1 - self._margins)
-                    take_profit_price = round(take_profit_price, 2)
-                    logging.info(f"{self._symbol} has {pos_qty} Net Position, insert buy take profit order at {take_profit_price} for fill price {fill_price}")
-                    long_order = await self._ordermanager.insert_order(symbol=self._symbol, 
-                                                                       price=take_profit_price, 
-                                                                       quantity=abs(pos_qty), 
-                                                                       side=SIDE_BUY, 
-                                                                       order_type=self._order_type)
-                    if long_order and long_order.success:
-                        Order_ID_TP.append(long_order.order_id)
+                    fill_price, pnl = await self._get_fill_price_and_pnl()
+
+                    # Check if either fill_price or pnl is None
+                    if fill_price is None or pnl is None:
+                        logging.warning(f"No valid fill price or PnL for {self._symbol}. Skipping take-profit for this cycle.")
+                        continue
+
+                    # Check stop loss
+                    if pnl < -self._stop_loss and self._stop_loss != 0.0:
+                        await self._ordermanager.close_position(self._symbol)
+                        logging.info(f"Stop loss triggered, closing {pos_qty} short position for {self._symbol}")
+                    else:
+                        take_profit_price = fill_price * (1 - self._margins)
+                        take_profit_price = round(take_profit_price, 2)
+                        logging.info(f"{self._symbol} has {pos_qty} Net Position, inserting buy take profit order at {take_profit_price} (fill price: {fill_price})")
+                        long_order = await self._ordermanager.insert_order(symbol=self._symbol, 
+                                                                        price=take_profit_price, 
+                                                                        quantity=abs(pos_qty), 
+                                                                        side=SIDE_BUY, 
+                                                                        order_type=self._order_type)
+                        if long_order and long_order.success:
+                            Order_ID_TP.append(long_order.order_id)
 
             except Exception as e:
                 logging.error(f"Error in placing take-profit orders: {e}")
 
-            await asyncio.sleep(self._tp_loop_sleep_time)  
+            await asyncio.sleep(self._tp_loop_sleep_time)
 
             if self._order_type != ORDER_TYPE_IOC:
                 for order in Order_ID_TP:
@@ -200,6 +226,7 @@ class MarketMaker:
                         logging.error(f"Error cancelling take-profit order {order}: {e}")
 
 
+                                                                                        
     async def main(self) -> None:
         
         await asyncio.gather(self._trader(), self._take_profit())
@@ -210,15 +237,15 @@ async def MarketMakerBasic():
     o = OrderManager()
     await asyncio.sleep(5)  
 
-    AAPL = MarketMaker(dataclient=i, ordermanager=o, symbol="AAPL", margins=0.002, max_position=5, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    AMZN = MarketMaker(dataclient=i, ordermanager=o, symbol="AMZN", margins=0.002, max_position=6 , trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    TSLA = MarketMaker(dataclient=i, ordermanager=o, symbol="TSLA", margins=0.002, max_position=5, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    NVDA = MarketMaker(dataclient=i, ordermanager=o, symbol="NVDA", margins=0.002, max_position=9, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    META = MarketMaker(dataclient=i, ordermanager=o, symbol="META", margins=0.002, max_position=2, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    GOOGL = MarketMaker(dataclient=i, ordermanager=o, symbol="GOOGL", margins=0.002, max_position=7, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    QCOM = MarketMaker(dataclient=i, ordermanager=o, symbol="QCOM", margins=0.002, max_position=5, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    MSFT = MarketMaker(dataclient=i, ordermanager=o, symbol="MSFT", margins=0.002, max_position=2, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    NFLX = MarketMaker(dataclient=i, ordermanager=o, symbol="NFLX", margins=0.002, max_position=1, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    AAPL = MarketMaker(dataclient=i, ordermanager=o, symbol="AAPL", margins=0.002, stop_loss = 0.01, max_position=5, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    AMZN = MarketMaker(dataclient=i, ordermanager=o, symbol="AMZN", margins=0.002, stop_loss = 0.01, max_position=6 , trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    TSLA = MarketMaker(dataclient=i, ordermanager=o, symbol="TSLA", margins=0.002, stop_loss = 0.01, max_position=5, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    NVDA = MarketMaker(dataclient=i, ordermanager=o, symbol="NVDA", margins=0.002, stop_loss = 0.01, max_position=9, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    META = MarketMaker(dataclient=i, ordermanager=o, symbol="META", margins=0.002, stop_loss = 0.01, max_position=2, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    GOOGL = MarketMaker(dataclient=i, ordermanager=o, symbol="GOOGL", margins=0.002, stop_loss = 0.01, max_position=7, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    QCOM = MarketMaker(dataclient=i, ordermanager=o, symbol="QCOM", margins=0.002, stop_loss = 0.01, max_position=5, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    MSFT = MarketMaker(dataclient=i, ordermanager=o, symbol="MSFT", margins=0.002, stop_loss = 0.01, max_position=2, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    NFLX = MarketMaker(dataclient=i, ordermanager=o, symbol="NFLX", margins=0.002, stop_loss = 0.01, max_position=1, trader_loop_sleep_time = 15, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
 
     asyncio.create_task(i.start())
     await o.start()  
