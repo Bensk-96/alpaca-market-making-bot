@@ -28,6 +28,9 @@ ORDER_TYPE_DAY  = 'day'
 ORDER_TYPE_GTC  = 'gtc'
 ALL_ORDER_TYPES = [ORDER_TYPE_LIMIT, ORDER_TYPE_IOC,ORDER_TYPE_DAY, ORDER_TYPE_GTC]
 
+
+## TODO Finish on_trade_update 
+
 class Credentials:
     key_id = None
     secret_key = None
@@ -158,7 +161,6 @@ class DataClient():
             await self._position_manager.update_position(symbol, position_qty)
         self._trade_update[symbol][id] = trade_update
         #logging.info(trade_update)
-
         if (trade_update.event == PARTIAL_FILL):
             logging.info(f"PARTIAL FILL: {side} order for {symbol}, filled {filled_qty}.")
         if (trade_update.event == FILL):
@@ -394,35 +396,32 @@ class OrderManager():
             logging.error(f"Error occurred while canceling all orders: {e}")
             return CancelAllOrdersResponse(success=False, order_statuses={}, error=str(e))
 
-    ## TODO add symbol to cancel order logging
     async def cancel_order(self, order_id: str):
-        assert order_id is not None, "Order ID must be specified"
-        cancel_url_with_id = f"{self._order_url}/{order_id}"
-
+        assert order_id is not None, "Order ID must be specified"   
+        # Add the order ID to the URL path
+        cancel_url_with_id = f"{self._order_url}/{order_id}"  
         try:
             # Send the DELETE request to cancel the order
             async with Client.session.delete(cancel_url_with_id) as result:
-                # Parse the response as JSON
-                response_json = await result.json()
+                response_text = await result.text()
 
                 # Check for the success code (204)
                 if result.status == 204:
-                    symbol = response_json.get("symbol", "Unknown")
-                    side = response_json.get("side", "Unknown")
-                    logging.info(f"Successfully canceled {side} order for {symbol}. Order ID: {order_id}")
+                    logging.info(f"Successfully canceled Order ID : {order_id}")
                     return CancelOrderResponse(success=True)
                 elif result.status == 404:
-                    logging.warning(f"Order {order_id} not found: {response_json}")
+                    logging.warning(f"Order {order_id} not found: {response_text}")
                     return CancelOrderResponse(success=False, error="Order not found")
                 elif result.status == 422:
-                    logging.warning(f"Order {order_id} is no longer cancelable (Status {result.status}): {response_json}")
+                    logging.warning(f"Order {order_id} is no longer cancelable (Status {result.status}): {response_text}")
                     return CancelOrderResponse(success=False, error="Order no longer cancelable")
                 else:
-                    logging.warning(f"Failed to cancel order {order_id} (Status {result.status}): {response_json}")
+                    logging.warning(f"Failed to cancel order {order_id} (Status {result.status}): {response_text}")
                     return CancelOrderResponse(success=False, error=f"Failed with status {result.status}")
         except Exception as e:
             logging.warning(f"Error cancelling order {order_id}: {e}")
             return CancelOrderResponse(success=False, error=str(e))
+    
 
     
     ## TODO Get orders and get order by id
