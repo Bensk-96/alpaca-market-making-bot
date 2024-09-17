@@ -76,11 +76,8 @@ class Client:
             await cls.session.close()
             cls.session = None
 
-##TODO Test out DataClient and OrderManager 
-##TODO Test out cancel_all_orders method 
-
 class DataClient(): 
-    def __init__(self, max_nr_trade_history: int = 100, max_nr_bar_history: int = 100,symbols : Optional[Set[str]] = None):   
+    def __init__(self, max_nr_trade_history: int = 100, max_nr_bar_history: int = 100, symbols : Optional[Set[str]] = None):   
         self._max_trade_history = max_nr_trade_history
         self._max_bar_history = max_nr_bar_history
         self._symbols = symbols if symbols is not None else set()
@@ -89,7 +86,7 @@ class DataClient():
         self._last_trade_price = {}
         #self._trade_tick_hist = defaultdict(deque)
         self._trade_tick_hist = defaultdict(lambda: deque(maxlen=self._max_trade_history))
-        self._last_quote = defaultdict(deque)
+        self._last_quote = defaultdict(deque) ## TODO: modify it to self._last_quote = {}
         self._last_mid_price = {}
         self._last_bar = {}
         #self._bar_hist = defaultdict(deque)
@@ -390,6 +387,7 @@ class OrderManager():
             logging.error(f"Error occurred while canceling all orders: {e}")
             return CancelAllOrdersResponse(success=False, order_statuses={}, error=str(e))
 
+    ## TODO add symbol to cancel order logging
     async def cancel_order(self, order_id: str):
         assert order_id is not None, "Order ID must be specified"   
         # Add the order ID to the URL path
