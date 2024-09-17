@@ -106,7 +106,7 @@ class MarketMaker:
 
             try:
                 if pos_qty == 0:
-                    logging.info(f"{self._symbol} has {pos_qty} Net Position, insert buy order at {self._buy_price} and sell limit order at {self._sell_price}")
+                    logging.info(f"{self._symbol} has {pos_qty} Net Position, insert buy limit order at {self._buy_price} and sell limit order at {self._sell_price}")
                     long_order = await self._ordermanager.insert_order(symbol=self._symbol, 
                                                                        price=self._buy_price, 
                                                                        quantity=self._max_position, 
@@ -210,15 +210,15 @@ async def MarketMakerBasic():
     o = OrderManager()
     await asyncio.sleep(5)  
 
-    AAPL = MarketMaker(dataclient=i, ordermanager=o, symbol="AAPL", margins=0.001, max_position=5, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    AMZN = MarketMaker(dataclient=i, ordermanager=o, symbol="AMZN", margins=0.001, max_position=6 , trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    TSLA = MarketMaker(dataclient=i, ordermanager=o, symbol="TSLA", margins=0.001, max_position=5, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    NVDA = MarketMaker(dataclient=i, ordermanager=o, symbol="NVDA", margins=0.001, max_position=9, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    META = MarketMaker(dataclient=i, ordermanager=o, symbol="META", margins=0.001, max_position=2, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    GOOGL = MarketMaker(dataclient=i, ordermanager=o, symbol="GOOGL", margins=0.001, max_position=7, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    QCOM = MarketMaker(dataclient=i, ordermanager=o, symbol="QCOM", margins=0.001, max_position=5, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    MSFT = MarketMaker(dataclient=i, ordermanager=o, symbol="MSFT", margins=0.001, max_position=2, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
-    NFLX = MarketMaker(dataclient=i, ordermanager=o, symbol="NFLX", margins=0.001, max_position=1, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_DAY)
+    AAPL = MarketMaker(dataclient=i, ordermanager=o, symbol="AAPL", margins=0.002, max_position=5, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_IOC)
+    AMZN = MarketMaker(dataclient=i, ordermanager=o, symbol="AMZN", margins=0.002, max_position=6 , trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_IOC)
+    TSLA = MarketMaker(dataclient=i, ordermanager=o, symbol="TSLA", margins=0.002, max_position=5, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_IOC)
+    NVDA = MarketMaker(dataclient=i, ordermanager=o, symbol="NVDA", margins=0.002, max_position=9, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_IOC)
+    META = MarketMaker(dataclient=i, ordermanager=o, symbol="META", margins=0.002, max_position=2, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_IOC)
+    GOOGL = MarketMaker(dataclient=i, ordermanager=o, symbol="GOOGL", margins=0.002, max_position=7, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_IOC)
+    QCOM = MarketMaker(dataclient=i, ordermanager=o, symbol="QCOM", margins=0.002, max_position=5, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_IOC)
+    MSFT = MarketMaker(dataclient=i, ordermanager=o, symbol="MSFT", margins=0.002, max_position=2, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_IOC)
+    NFLX = MarketMaker(dataclient=i, ordermanager=o, symbol="NFLX", margins=0.002, max_position=1, trader_loop_sleep_time = 20, tp_loop_sleep_time= 5, price_type = MIDPRICE, order_type= ORDER_TYPE_IOC)
 
     asyncio.create_task(i.start())
     await o.start()  
