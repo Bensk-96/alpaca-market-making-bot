@@ -406,8 +406,8 @@ class OrderManager():
 
                 # Check for the success code (204)
                 if result.status == 204:
-                    symbol = response_text.get("symbol", "Unknown")
-                    side = response_text.get("side", "Unknown")
+                    symbol = response_text["symbol"]
+                    side = response_text["side"]
                     logging.info(f"Successfully canceled {side} Order for {symbol}. Order ID : {order_id}")
                     return CancelOrderResponse(success=True)
                 elif result.status == 404:
