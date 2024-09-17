@@ -149,6 +149,8 @@ class DataClient():
     async def on_trade_update(self, trade_update) -> None:
         symbol = trade_update.order["symbol"]
         id = trade_update.order["id"]      
+        filled_qty = trade_update.order["filled_qty"]
+        side = trade_update.order["side"]
         #logging.info(f"Symbol: {symbol}, ID: {id}, Type of _trade_update[symbol]: {type(self._trade_update[symbol])}")  
         if trade_update.event in FILL_EVENT:   ## TODO order status update : fill, cancel, rejected 
             #print(f"update position for {symbol}")
@@ -156,6 +158,12 @@ class DataClient():
             await self._position_manager.update_position(symbol, position_qty)
         self._trade_update[symbol][id] = trade_update
         #logging.info(trade_update)
+
+        if (trade_update.event == PARTIAL_FILL):
+            logging.info(f"PARTIAL FILL: {side} order for {symbol}, filled {filled_qty}.")
+        if (trade_update.event == FILL):
+            logging.info(f"FILL: {side} order for {symbol}, filled {filled_qty}.")
+
 
     #def get_trade_update(self, symbol : str, id :str):
     #        return self._trade_update.get(symbol, None)
@@ -398,7 +406,9 @@ class OrderManager():
 
                 # Check for the success code (204)
                 if result.status == 204:
-                    logging.info(f"Successfully canceled Order {order_id}")
+                    symbol = response_text.get("symbol", "Unknown")
+                    side = response_text.get("side", "Unknown")
+                    logging.info(f"Successfully canceled {side} Order for {symbol}. Order ID : {order_id}")
                     return CancelOrderResponse(success=True)
                 elif result.status == 404:
                     logging.warning(f"Order {order_id} not found: {response_text}")
