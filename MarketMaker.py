@@ -166,7 +166,7 @@ class MarketMaker:
                 # Handling for long positions (pos_qty > 0)
                 if pos_qty > 0:
                     fill_price, pnl = await self._get_fill_price_and_pnl()
-                    print(f"pnl of {self._symbol} is {pnl}")
+                    logging.info(f"pnl of {self._symbol} is {pnl}")
 
                     # Check if either fill_price or pnl is None
                     if fill_price is None or pnl is None:
@@ -193,7 +193,7 @@ class MarketMaker:
                 # Handling for short positions (pos_qty < 0)
                 elif pos_qty < 0:
                     fill_price, pnl = await self._get_fill_price_and_pnl()
-                    print(f"pnl of {self._symbol} is {pnl}")
+                    logging.info(f"pnl of {self._symbol} is {pnl}")
                     # Check if either fill_price or pnl is None
                     if fill_price is None or pnl is None:
                         logging.warning(f"No valid fill price or PnL for {self._symbol}. Skipping take-profit for this cycle.")
