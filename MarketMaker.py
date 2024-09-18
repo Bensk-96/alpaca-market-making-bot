@@ -38,7 +38,7 @@ class MarketMaker:
             pos_qty = self._dataclient.get_position_by_symbol(self._symbol)
 
             price = self._dataclient.get_last_mid_price(self._symbol)  
-            
+
             if price is None:
                 logging.error(f"No price info available for symbol {self._symbol}. Skipping this cycle.")
                 await asyncio.sleep(20)  # Sleep before retrying
@@ -98,11 +98,11 @@ class MarketMaker:
 
                     # Calculate PnL
                     pnl = (last_trade_price / fill_price - 1) if pos_qty > 0 else (1 - fill_price / last_trade_price)
-                    logging.info(f"PnL of {self._symbol} is {pnl}")
+                    logging.info(f"PnL of {self._symbol} is {pnl}. Ltp is {last_trade_price} and fill price is {fill_price}")
 
                     # Check for stop loss
                     if pnl < -self._stop_loss and self._stop_loss != 0.0:
-                        await self._ordermanager.close_position(self._symbol, qty = pos_qty)
+                        await self._ordermanager.close_position(self._symbol, qty = abs(pos_qty))
                         logging.info(f"Stop loss triggered, closing {pos_qty} position for {self._symbol}")
                     else:
                         # Calculate take-profit price
