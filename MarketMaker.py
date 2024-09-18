@@ -62,7 +62,7 @@ class MarketMaker:
     async def _get_fill_price_and_pnl(self):
         position_object = await self._dataclient.get_position_object_by_symbol(self._symbol)
         if position_object is not None:
-            return float(position_object['avg_entry_price']), float(position_object['unrealized_intraday_plpc'])  * 0.01 ## Convert to scale of 1
+            return float(position_object['avg_entry_price']), float(position_object['unrealized_intraday_plpc']) # * 0.01 ## Convert to scale of 1
         else:
             logging.warning(f"No position found for {self._symbol}")
             return None, None  # Return None if no position is found
