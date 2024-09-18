@@ -431,9 +431,6 @@ class OrderManager():
         pass
 
 
-
-
-
 class InsertOrderResponse:
     def __init__(self, success: bool, order_id: Optional[int], error: Optional[str]):
         self.success: bool = success
