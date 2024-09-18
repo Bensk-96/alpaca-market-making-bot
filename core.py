@@ -219,7 +219,7 @@ class PositionManager():
         current_time = time.time()
 
         # Check if we need to refresh the positions (e.g., every 60 seconds or if forced)
-        if not force_refresh and (current_time - self._last_update_time < 10):
+        if not force_refresh and (current_time - self._last_update_time < 5):
             logging.info("Using cached positions data")
             return
 
