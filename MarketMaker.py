@@ -97,7 +97,7 @@ class MarketMaker:
                         continue
 
                     # Calculate PnL
-                    pnl = (last_trade_price / fill_price - 1) if pos_qty > 0 else (1 - fill_price / last_trade_price)
+                    pnl = (last_trade_price / fill_price - 1) if pos_qty > 0 else (1 - last_trade_price / fill_price)
                     logging.info(f"PnL of {self._symbol} is {pnl}. Ltp is {last_trade_price} and fill price is {fill_price}")
 
                     # Check for stop loss
