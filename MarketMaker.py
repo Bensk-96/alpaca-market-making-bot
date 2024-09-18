@@ -38,6 +38,12 @@ class MarketMaker:
             pos_qty = self._dataclient.get_position_by_symbol(self._symbol)
 
             price = self._dataclient.get_last_mid_price(self._symbol)  
+            
+            if price is None:
+                logging.error(f"No price info available for symbol {self._symbol}. Skipping this cycle.")
+                await asyncio.sleep(20)  # Sleep before retrying
+                continue
+
             logging.info(f"midprice of {self._symbol} is {price}")
             self._buy_price = round(price - price * self._margins, 2)
             self._sell_price = round(price + price * self._margins, 2)
@@ -96,7 +102,7 @@ class MarketMaker:
 
                     # Check for stop loss
                     if pnl < -self._stop_loss and self._stop_loss != 0.0:
-                        await self._ordermanager.close_position(self._symbol)
+                        await self._ordermanager.close_position(self._symbol, qty = pos_qty)
                         logging.info(f"Stop loss triggered, closing {pos_qty} position for {self._symbol}")
                     else:
                         # Calculate take-profit price
