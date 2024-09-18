@@ -329,9 +329,46 @@ class OrderManager():
         return responses
 
    
+    # async def close_position(self, symbol: str, qty: float = None, percentage: float = None):
+    #     # Ensure that either qty or percentage is provided, but not both.
+    #     assert (qty is not None) != (percentage is not None), "Either qty or percentage must be specified, but not both"
+
+    #     # Construct the URL for the specific symbol's position.
+    #     pos_url_with_symbol = f"{self._pos_url}/{symbol}"
+
+    #     # Prepare the parameters for the request.
+    #     params = {}
+    #     if qty is not None:
+    #         params["qty"] = qty
+    #     if percentage is not None:
+    #         params["percentage"] = percentage
+
+    #     try:
+    #         # Send the DELETE request to the API.
+    #         async with Client.session.delete(pos_url_with_symbol, params=params) as result:
+    #             response_text = await result.text()
+
+    #             # Check for a successful response.
+    #             if result.status == 200:
+    #                 logging.info(f"Closed position for {symbol}.")
+    #                 order_response = await result.json()
+    #                 logging.info(f"Order response: {order_response}")
+    #                 return ClosePositionResponse(symbol=symbol, success=True, status=result.status)
+    #             else:
+    #                 logging.warning(f"Failed to close position for {symbol} (Status {result.status}): {response_text}")
+    #                 return ClosePositionResponse(symbol=symbol, success=False, status=result.status, error=response_text)
+
+    #     except Exception as e:
+    #         logging.error(f"Error closing position for {symbol}: {e}")
+    #         return ClosePositionResponse(symbol=symbol, success=False, status=500, error=str(e))
+   
     async def close_position(self, symbol: str, qty: float = None, percentage: float = None):
-        # Ensure that either qty or percentage is provided, but not both.
-        assert (qty is not None) != (percentage is not None), "Either qty or percentage must be specified, but not both"
+        # Check if neither qty nor percentage is provided, implying a full close of the position.
+        if qty is None and percentage is None:
+            logging.info(f"Closing full position for {symbol}.")
+            
+        # Ensure that qty and percentage are not both provided at the same time.
+        assert (qty is None or percentage is None), "Specify either qty or percentage, but not both."
 
         # Construct the URL for the specific symbol's position.
         pos_url_with_symbol = f"{self._pos_url}/{symbol}"
@@ -361,7 +398,7 @@ class OrderManager():
         except Exception as e:
             logging.error(f"Error closing position for {symbol}: {e}")
             return ClosePositionResponse(symbol=symbol, success=False, status=500, error=str(e))
-   
+
 
     async def cancel_all_orders(self):
         try:
