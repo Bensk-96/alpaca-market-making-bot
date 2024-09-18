@@ -62,7 +62,7 @@ class MarketMaker:
     async def _get_fill_price_and_pnl(self):
         position_object = await self._dataclient.get_position_object_by_symbol(self._symbol)
         if position_object is not None:
-            return float(position_object['avg_entry_price']), float(position_object['unrealized_intraday_plpc'])
+            return float(position_object['avg_entry_price']), float(position_object['unrealized_intraday_plpc'] * 0.01) ## Convert to scale of 1
         else:
             logging.warning(f"No position found for {self._symbol}")
             return None, None  # Return None if no position is found
@@ -166,6 +166,7 @@ class MarketMaker:
                 # Handling for long positions (pos_qty > 0)
                 if pos_qty > 0:
                     fill_price, pnl = await self._get_fill_price_and_pnl()
+                    print(f"pnl of {self._symbol} is {pnl}")
 
                     # Check if either fill_price or pnl is None
                     if fill_price is None or pnl is None:
@@ -192,7 +193,7 @@ class MarketMaker:
                 # Handling for short positions (pos_qty < 0)
                 elif pos_qty < 0:
                     fill_price, pnl = await self._get_fill_price_and_pnl()
-
+                    print(f"pnl of {self._symbol} is {pnl}")
                     # Check if either fill_price or pnl is None
                     if fill_price is None or pnl is None:
                         logging.warning(f"No valid fill price or PnL for {self._symbol}. Skipping take-profit for this cycle.")
