@@ -170,6 +170,7 @@ class MarketMaker:
                     # Check if either fill_price or pnl is None
                     if fill_price is None or pnl is None:
                         logging.warning(f"No valid fill price or PnL for {self._symbol}. Skipping take-profit for this cycle.")
+                        await asyncio.sleep(self._tp_loop_sleep_time)
                         continue
 
                     # Check stop loss
@@ -195,6 +196,7 @@ class MarketMaker:
                     # Check if either fill_price or pnl is None
                     if fill_price is None or pnl is None:
                         logging.warning(f"No valid fill price or PnL for {self._symbol}. Skipping take-profit for this cycle.")
+                        await asyncio.sleep(self._tp_loop_sleep_time)
                         continue
 
                     # Check stop loss
