@@ -46,20 +46,52 @@ class MarketMaker:
             self._buy_price = round(price - price * self._margins, 2)
             self._sell_price = round(price + price * self._margins, 2)
 
+            # try:
+            #     if pos_qty == 0:
+            #         logging.info(f"{self._symbol} has {pos_qty} Net Position, insert buy limit order at {self._buy_price} and sell limit order at {self._sell_price}")
+            #         long_order = await self._ordermanager.insert_order(symbol=self._symbol, 
+            #                                                            price=self._buy_price, 
+            #                                                            quantity=self._max_position, 
+            #                                                            side=SIDE_BUY, 
+            #                                                            order_type=ORDER_TYPE_DAY)
+            #         await asyncio.sleep(1)  
+            #         short_order = await self._ordermanager.insert_order(symbol=self._symbol, 
+            #                                                             price=self._sell_price, 
+            #                                                             quantity=self._max_position, 
+            #                                                             side=SIDE_SELL, 
+            #                                                             order_type=ORDER_TYPE_DAY)
+            #         if long_order and long_order.success:
+            #             Order_ID_trader.append(long_order.order_id)
+            #         if short_order and short_order.success:
+            #             Order_ID_trader.append(short_order.order_id)
+
+            # except Exception as e:
+            #     logging.error(f"Error in placing orders: {e}")
+
+
             try:
                 if pos_qty == 0:
-                    logging.info(f"{self._symbol} has {pos_qty} Net Position, insert buy limit order at {self._buy_price} and sell limit order at {self._sell_price}")
-                    long_order = await self._ordermanager.insert_order(symbol=self._symbol, 
-                                                                       price=self._buy_price, 
-                                                                       quantity=self._max_position, 
-                                                                       side=SIDE_BUY, 
-                                                                       order_type=ORDER_TYPE_DAY)
-                    await asyncio.sleep(1)  
-                    short_order = await self._ordermanager.insert_order(symbol=self._symbol, 
-                                                                        price=self._sell_price, 
-                                                                        quantity=self._max_position, 
-                                                                        side=SIDE_SELL, 
-                                                                        order_type=ORDER_TYPE_DAY)
+                    logging.info(f"{self._symbol} has {pos_qty} Net Position, inserting buy limit order at {self._buy_price} and sell limit order at {self._sell_price}")
+                    
+                    # Use asyncio.gather to submit both orders concurrently
+                    long_order, short_order = await asyncio.gather(
+                        self._ordermanager.insert_order(
+                            symbol=self._symbol, 
+                            price=self._buy_price, 
+                            quantity=self._max_position, 
+                            side=SIDE_BUY, 
+                            order_type=ORDER_TYPE_DAY
+                        ),
+                        self._ordermanager.insert_order(
+                            symbol=self._symbol, 
+                            price=self._sell_price, 
+                            quantity=self._max_position, 
+                            side=SIDE_SELL, 
+                            order_type=ORDER_TYPE_DAY
+                        )
+                    )
+
+                    # Check the results of both orders
                     if long_order and long_order.success:
                         Order_ID_trader.append(long_order.order_id)
                     if short_order and short_order.success:
@@ -67,6 +99,7 @@ class MarketMaker:
 
             except Exception as e:
                 logging.error(f"Error in placing orders: {e}")
+
 
             await asyncio.sleep(self._trader_loop_sleep_time)  
 
@@ -96,7 +129,7 @@ class MarketMaker:
 
                     # Calculate PnL
                     pnl = (mid_price / fill_price - 1) if pos_qty > 0 else (1 - mid_price / fill_price)
-                    logging.info(f"PnL of {self._symbol} is {pnl}. Ltp is {mid_price} and fill price of {'long' if pos_qty > 0 else 'short'} position is {fill_price}")
+                    logging.info(f"PnL of {self._symbol} is {pnl}. Mid price is {mid_price} and fill price of {'long' if pos_qty > 0 else 'short'} position is {fill_price}")
 
                     # Calculate take-profit price
                     take_profit_price = fill_price * (1 + self._margins) if pos_qty > 0 else fill_price * (1 - self._margins)
