@@ -86,20 +86,17 @@ class MarketMaker:
             try:
                 if pos_qty != 0:  # Only execute logic if there is a position
                     fill_price = await self._get_fill_price()
-                    last_trade_price = self._dataclient.get_last_trade_price(self._symbol)
+                    mid_price = self._dataclient.get_last_mid_price(self._symbol)
                     
                     # Ensure valid PnL calculation
-                    if fill_price is None or last_trade_price is None:
+                    if fill_price is None or mid_price is None:
                         logging.warning(f"No valid fill price or PnL for {self._symbol}. Skipping take-profit for this cycle.")
                         await asyncio.sleep(self._tp_loop_sleep_time)
                         continue
 
                     # Calculate PnL
-                    pnl = (last_trade_price / fill_price - 1) if pos_qty > 0 else (1 - last_trade_price / fill_price)
-                    logging.info(f"PnL of {self._symbol} is {pnl}. Ltp is {last_trade_price} and fill price of {'long' if pos_qty > 0 else 'short'} position is {fill_price}")
-
-
-                        
+                    pnl = (mid_price / fill_price - 1) if pos_qty > 0 else (1 - mid_price / fill_price)
+                    logging.info(f"PnL of {self._symbol} is {pnl}. Ltp is {mid_price} and fill price of {'long' if pos_qty > 0 else 'short'} position is {fill_price}")
 
                     # Calculate take-profit price
                     take_profit_price = fill_price * (1 + self._margins) if pos_qty > 0 else fill_price * (1 - self._margins)
@@ -165,4 +162,3 @@ except KeyboardInterrupt:
     logging.info('Stopped (KeyboardInterrupt)')
 finally:
     loop.run_until_complete(Client.close_session()) 
-

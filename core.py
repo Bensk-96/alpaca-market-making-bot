@@ -89,7 +89,8 @@ class DataClient():
         self._last_trade_price = {}
         #self._trade_tick_hist = defaultdict(deque)
         self._trade_tick_hist = defaultdict(lambda: deque(maxlen=self._max_trade_history))
-        self._last_quote = defaultdict(deque) ## TODO: modify it to self._last_quote = {}
+        #self._last_quote = defaultdict(deque) ## TODO: modify it to self._last_quote = {}
+        self._last_quote = {}
         self._last_mid_price = {}
         self._last_bar = {}
         #self._bar_hist = defaultdict(deque)
@@ -157,7 +158,7 @@ class DataClient():
         #logging.info(f"Symbol: {symbol}, ID: {id}, Type of _trade_update[symbol]: {type(self._trade_update[symbol])}")  
         if trade_update.event in FILL_EVENT:   ## TODO order status update : fill, cancel, rejected 
             #print(f"update position for {symbol}")
-            position_qty = float(trade_update.position_qty) ## TODO add logging for partial fill / fill order, symbol, fill number
+            position_qty = float(trade_update.position_qty) 
             await self._position_manager.update_position(symbol, position_qty)
         self._trade_update[symbol][id] = trade_update
         #logging.info(trade_update)
@@ -362,13 +363,13 @@ class OrderManager():
     #         logging.error(f"Error closing position for {symbol}: {e}")
     #         return ClosePositionResponse(symbol=symbol, success=False, status=500, error=str(e))
    
-    async def close_position(self, symbol: str, qty: float = None, percentage: float = None):
+    async def close_position(self, symbol: str, qty: float = None, percentage: float = None): ##TODO check close_position method and if pos in pos manager adjust accordingly
         # Check if neither qty nor percentage is provided, implying a full close of the position.
         if qty is None and percentage is None:
             logging.info(f"Closing full position for {symbol}.")
             
         # Ensure that qty and percentage are not both provided at the same time.
-        assert (qty is None or percentage is None), "Specify either qty or percentage, but not both."
+        assert not (qty is not None and percentage is not None), "Specify either qty or percentage, but not both."  ##TODO check this logic
 
         # Construct the URL for the specific symbol's position.
         pos_url_with_symbol = f"{self._pos_url}/{symbol}"
